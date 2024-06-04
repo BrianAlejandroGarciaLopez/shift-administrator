@@ -5,6 +5,9 @@ import com.basic.shiftadministrator.model.response.PatientModel;
 import com.basic.shiftadministrator.repository.IShiftRepository;
 import com.basic.shiftadministrator.service.IShiftService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -16,13 +19,13 @@ public class ShiftService implements IShiftService {
     private final IShiftRepository repository;
     private final RestTemplate apiConsume;
     @Override
-    public void addShift(OffsetDateTime date, String treatment, String dniPatient) {
+    public ShiftModel addShift(OffsetDateTime date, String treatment, String dniPatient) {
         PatientModel patient = apiConsume.getForObject("http://localhost:9001/patient-manager/patient/dni/"+dniPatient,PatientModel.class);
         ShiftModel shift = new ShiftModel();
         shift.setPatientFullName(patient.getName()+ " " + patient.getLastName());
         shift.setTreatment(treatment);
         shift.setShiftDate(date);
-        repository.save(shift);
+        return repository.save(shift);
     }
 
     @Override
@@ -37,8 +40,12 @@ public class ShiftService implements IShiftService {
     }
 
     @Override
-    public List<ShiftModel> findAllShift() {
-        return repository.findAll();
+    public List<ShiftModel> findAllShift(Pageable pageable) {
+        Page<ShiftModel> page =  repository.findAll(PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize()
+        ));
+        return page.getContent();
     }
 
     @Override
