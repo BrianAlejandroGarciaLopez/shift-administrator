@@ -1,5 +1,6 @@
 package com.basic.shiftadministrator.service.impl;
 
+import com.basic.shiftadministrator.messaging.feign.PatientFeignClient;
 import com.basic.shiftadministrator.model.ShiftModel;
 import com.basic.shiftadministrator.model.response.PatientModel;
 import com.basic.shiftadministrator.repository.IShiftRepository;
@@ -9,7 +10,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -17,10 +17,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ShiftService implements IShiftService {
     private final IShiftRepository repository;
-    private final RestTemplate apiConsume;
+    private final PatientFeignClient patientFeignClient;
     @Override
     public ShiftModel addShift(OffsetDateTime date, String treatment, String dniPatient) {
-        PatientModel patient = apiConsume.getForObject("http://localhost:9001/patient-manager/patient/dni/"+dniPatient,PatientModel.class);
+        PatientModel patient = patientFeignClient.getPatientByDni(dniPatient);
         ShiftModel shift = new ShiftModel();
         shift.setPatientFullName(patient.getName()+ " " + patient.getLastName());
         shift.setTreatment(treatment);
